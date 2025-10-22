@@ -266,7 +266,7 @@ with footer_col1:
 with footer_col2:
     st.caption("📚 学年论文研究成果演示")
 with footer_col3:
-    st.caption("👨‍🎓 作者: 你的名字")
+    st.caption("👨‍🎓 作者: 樱桃小丸子wws")
 
 # 侧边栏（可选）
 with st.sidebar:
