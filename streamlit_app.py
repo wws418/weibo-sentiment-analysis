@@ -283,3 +283,4 @@ with st.sidebar:
         with st.spinner("分析中..."):
             s, c, t = analyze_sentiment_local(test_text)
         st.write(f"结果: {s} ({c:.1%})")
+
