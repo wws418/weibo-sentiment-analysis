@@ -38,11 +38,13 @@ st.markdown("""
     .negative { border-left-color: #dc3545 !important; }
     .neutral { border-left-color: #ffc107 !important; }
     .warning-box {
-        padding: 1rem;
-        border-radius: 8px;
-        background: #fff3cd;
-        border-left: 4px solid #ffc107;
+        padding: 1.2rem;
+        border-radius: 10px;
+        background: #2d3748;  /* 深灰色/黑色背景 */
+        border-left: 4px solid #4a5568;  /* 灰色边框 */
         margin: 1rem 0;
+        color: white;  /* 白色文字 */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -316,6 +318,7 @@ with tab2:
                 st.warning(f"⚠️ 情感不匹配！期望{expected_sentiment}，但识别为{sentiment}")
                 
                 # 智能建议
+                # 智能建议
                 st.markdown("""
                 <div class="warning-box">
                     <h4>💡 智能建议：</h4>
@@ -327,6 +330,7 @@ with tab2:
                     </ul>
                 </div>
                 """, unsafe_allow_html=True)
+
                 
         else:
             st.warning("⚠️ 请输入或生成案例内容")
@@ -363,3 +367,4 @@ with tab3:
 # 页脚信息
 st.markdown("---")
 st.caption("🎯 基于Streamlit部署 | 📚 学年论文研究成果演示 | 👨‍🎓 作者: wws")
+
