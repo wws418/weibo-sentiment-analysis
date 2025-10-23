@@ -37,13 +37,12 @@ st.markdown("""
     .positive { border-left-color: #28a745 !important; }
     .negative { border-left-color: #dc3545 !important; }
     .neutral { border-left-color: #ffc107 !important; }
-    .generate-btn {
-        background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
-        color: white;
-        border: none;
+    .warning-box {
+        padding: 1rem;
         border-radius: 8px;
-        padding: 10px 20px;
-        font-weight: bold;
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        margin: 1rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -88,7 +87,7 @@ def analyze_sentiment_api(text):
 def analyze_sentiment_local(text):
     """本地规则分析（备用方案）"""
     positive_words = ['好', '开心', '喜欢', '满意', '棒', '优秀', '推荐', '高兴', '幸福', '爱']
-    negative_words = ['差', '失望', '压力', '焦虑', '难受', '讨厌', '崩溃', '生气', '愤怒', '垃圾']
+    negative_words = ['差', '失望', '压力', '焦虑', '难受', '讨厌', '崩溃', '生气', '愤怒', '垃圾', '伤心']
 
     text_lower = text.lower()
     pos_count = sum(1 for word in positive_words if word in text_lower)
@@ -124,7 +123,7 @@ def generate_case_content(case_type):
     payload = {
         "model": "glm-4",
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.8,  # 提高创造性
+        "temperature": 0.8,
         "max_tokens": 50
     }
     
@@ -133,18 +132,32 @@ def generate_case_content(case_type):
         if response.status_code == 200:
             result = response.json()
             content = result['choices'][0]['message']['content'].strip()
-            # 清理可能的多余引号
             content = content.replace('"', '').replace('“', '').replace('”', '')
             return content
         return "生成失败，请点击按钮重试"
     except:
         return "网络错误，请点击按钮重试"
 
+def detect_expected_sentiment(case_type):
+    """根据案例类型返回期望的情感"""
+    sentiment_map = {
+        "开心喜悦": "积极",
+        "焦虑压力": "消极", 
+        "反讽表达": "消极",  # 反讽实际是消极
+        "混合情感": "中性",  # 混合情感通常表现为中性
+        "中性评价": "中性"
+    }
+    return sentiment_map.get(case_type, "中性")
+
 # 初始化session state
 if 'current_case' not in st.session_state:
-    st.session_state.current_case = "请点击生成按钮获取案例内容"
+    st.session_state.current_case = ""
 if 'current_case_type' not in st.session_state:
     st.session_state.current_case_type = "开心喜悦"
+if 'auto_generated' not in st.session_state:
+    st.session_state.auto_generated = False
+if 'last_analysis' not in st.session_state:
+    st.session_state.last_analysis = None
 
 # 主界面标签页
 tab1, tab2, tab3 = st.tabs(["🔍 情感分析", "📚 研究案例", "🎓 关于研究"])
@@ -153,12 +166,9 @@ with tab1:
     st.subheader("实时情感分析体验")
 
     # 分析模式选择
-    col_mode = st.columns([1, 1])
-    with col_mode[0]:
-        use_api = st.checkbox("使用GLM-4大模型API", value=True, help="取消勾选将使用本地规则分析")
-    with col_mode[1]:
-        if not use_api:
-            st.info("🔧 本地规则模式")
+    use_api = st.checkbox("使用GLM-4大模型API", value=True, help="取消勾选将使用本地规则分析")
+    if not use_api:
+        st.info("🔧 本地规则模式")
 
     # 输入区域
     user_input = st.text_area(
@@ -169,73 +179,76 @@ with tab1:
     )
 
     # 分析按钮
-    col_btn = st.columns([1, 2, 1])
-    with col_btn[1]:
-        if st.button("🚀 开始情感分析", type="primary", use_container_width=True):
-            if user_input.strip():
-                with st.spinner("AI正在分析情感..."):
-                    start_time = time.time()
+    if st.button("🚀 开始情感分析", type="primary", use_container_width=True):
+        if user_input.strip():
+            with st.spinner("AI正在分析情感..."):
+                start_time = time.time()
 
-                    if use_api:
-                        sentiment, confidence, status = analyze_sentiment_api(user_input)
-                    else:
-                        sentiment, confidence, status = analyze_sentiment_local(user_input)
-
-                    analysis_time = time.time() - start_time
-
-                # 动态结果样式
-                sentiment_class = ""
-                if sentiment == "积极":
-                    sentiment_class = "positive"
-                    sentiment_emoji = "😊"
-                elif sentiment == "消极":
-                    sentiment_class = "negative"
-                    sentiment_emoji = "😟"
+                if use_api:
+                    sentiment, confidence, status = analyze_sentiment_api(user_input)
                 else:
-                    sentiment_class = "neutral"
-                    sentiment_emoji = "😐"
+                    sentiment, confidence, status = analyze_sentiment_local(user_input)
 
-                # 显示结果
-                st.markdown(f"""
-                <div class="result-box {sentiment_class}">
-                    <h3>分析结果: {sentiment} {sentiment_emoji} {status}</h3>
-                    <p><b>置信度:</b> <span style="color: {'#28a745' if confidence > 0.7 else '#ffc107' if confidence > 0.5 else '#dc3545'}">{confidence:.1%}</span></p>
-                    <p><b>分析耗时:</b> {analysis_time:.2f}秒</p>
-                    <p><b>使用技术:</b> {'智谱GLM-4大模型' if use_api else '本地规则分析'}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                analysis_time = time.time() - start_time
 
-                # 情感特效
-                if sentiment == "积极":
-                    st.balloons()
-                    st.success("🌟 检测到积极情感！")
-                elif sentiment == "消极":
-                    st.warning("💡 检测到消极情感，可能需要关注")
-                else:
-                    st.info("📝 情感倾向中性")
-
+            # 动态结果样式
+            sentiment_class = ""
+            if sentiment == "积极":
+                sentiment_class = "positive"
+                sentiment_emoji = "😊"
+            elif sentiment == "消极":
+                sentiment_class = "negative"
+                sentiment_emoji = "😟"
             else:
-                st.error("请输入评论内容！")
+                sentiment_class = "neutral"
+                sentiment_emoji = "😐"
+
+            # 显示结果
+            st.markdown(f"""
+            <div class="result-box {sentiment_class}">
+                <h3>分析结果: {sentiment} {sentiment_emoji} {status}</h3>
+                <p><b>置信度:</b> <span style="color: {'#28a745' if confidence > 0.7 else '#ffc107' if confidence > 0.5 else '#dc3545'}">{confidence:.1%}</span></p>
+                <p><b>分析耗时:</b> {analysis_time:.2f}秒</p>
+                <p><b>使用技术:</b> {'智谱GLM-4大模型' if use_api else '本地规则分析'}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 情感特效
+            if sentiment == "积极":
+                st.balloons()
+                st.success("🌟 检测到积极情感！")
+            elif sentiment == "消极":
+                st.warning("💡 检测到消极情感，可能需要关注")
+            else:
+                st.info("📝 情感倾向中性")
+
+        else:
+            st.error("请输入评论内容！")
 
 with tab2:
     st.subheader("研究案例库")
     
-    # 案例数据库（只保留分析说明）
+    # 案例数据库
     cases = {
         "开心喜悦": {
-            "analysis": "明确积极情感，包含成就感和喜悦情绪"
+            "analysis": "明确积极情感，包含成就感和喜悦情绪",
+            "expected": "积极"
         },
         "焦虑压力": {
-            "analysis": "典型负面情绪，包含压力和焦虑表达"
+            "analysis": "典型负面情绪，包含压力和焦虑表达",
+            "expected": "消极"
         },
         "反讽表达": {
-            "analysis": "反讽表达识别 - 表面积极实际消极，表情符号增加复杂性"
+            "analysis": "反讽表达识别 - 表面积极实际消极，表情符号增加复杂性",
+            "expected": "消极"
         },
         "混合情感": {
-            "analysis": "混合情感处理 - 同时包含积极和消极因素，需要综合判断"
+            "analysis": "混合情感处理 - 同时包含积极和消极因素，需要综合判断",
+            "expected": "中性"
         },
         "中性评价": {
-            "analysis": "中性情感 - 无明显情感倾向的表达"
+            "analysis": "中性情感 - 无明显情感倾向的表达",
+            "expected": "中性"
         }
     }
 
@@ -243,56 +256,80 @@ with tab2:
     selected_case = st.selectbox("选择研究案例类型:", list(cases.keys()))
     case_data = cases[selected_case]
     
-    # 更新当前案例类型
-    if selected_case != st.session_state.current_case_type:
-        st.session_state.current_case_type = selected_case
-        st.session_state.current_case = "请点击生成按钮获取新案例"
-
     # 案例内容区域
     col_case1, col_case2 = st.columns([3, 1])
     
     with col_case1:
-        case_text = st.text_area(
-            "案例内容:", 
-            st.session_state.current_case, 
-            height=100, 
-            key="case_display",
-            placeholder="点击右侧按钮生成案例内容"
+        # 手动输入或显示生成的内容
+        manual_input = st.text_area(
+            "案例内容（可手动编辑）:", 
+            value=st.session_state.current_case if st.session_state.current_case else "",
+            height=100,
+            key="manual_input",
+            placeholder="手动输入内容或点击生成按钮自动生成"
         )
+        
+        # 更新session state
+        if manual_input != st.session_state.current_case:
+            st.session_state.current_case = manual_input
+            st.session_state.auto_generated = False
     
     with col_case2:
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🔄 生成新案例", use_container_width=True, type="secondary"):
+        if st.button("🔄 AI生成案例", use_container_width=True, type="secondary"):
             with st.spinner("AI生成中..."):
                 new_case = generate_case_content(selected_case)
                 st.session_state.current_case = new_case
+                st.session_state.auto_generated = True
+                st.session_state.current_case_type = selected_case
             st.rerun()
 
     st.info(f"**研究重点:** {case_data['analysis']}")
+    st.info(f"**期望情感:** {case_data['expected']}")
 
     # 分析案例按钮
-    if st.button("📊 分析此案例", key="analyze_case", use_container_width=True):
-        if st.session_state.current_case and st.session_state.current_case != "请点击生成按钮获取案例内容":
+    if st.button("📊 验证情感识别", key="analyze_case", use_container_width=True):
+        if st.session_state.current_case and st.session_state.current_case.strip():
             with st.spinner("分析案例中..."):
                 sentiment, confidence, status = analyze_sentiment_api(st.session_state.current_case)
 
-            # 显示案例分析结果
-            col_result1, col_result2 = st.columns([2, 1])
-            with col_result1:
-                st.success(f"**分析结果:** {sentiment} (置信度: {confidence:.1%})")
-            with col_result2:
-                st.metric("情感倾向", sentiment)
-                
-            # 根据结果给出解读
-            if sentiment == "积极" and selected_case == "开心喜悦":
+            # 保存分析结果
+            st.session_state.last_analysis = {
+                "sentiment": sentiment,
+                "confidence": confidence,
+                "case_type": selected_case,
+                "expected": case_data["expected"],
+                "user_input": st.session_state.current_case
+            }
+
+            # 显示分析结果
+            st.success(f"**AI识别结果:** {sentiment} (置信度: {confidence:.1%})")
+            
+            # 验证匹配度
+            expected_sentiment = case_data["expected"]
+            is_correct = sentiment == expected_sentiment
+            
+            if is_correct:
                 st.balloons()
-                st.success("✅ AI正确识别了开心情感！")
-            elif sentiment == "消极" and selected_case == "焦虑压力":
-                st.success("✅ AI正确识别了焦虑情感！")
-            elif sentiment == "消极" and selected_case == "反讽表达":
-                st.success("✅ AI成功识别了反讽背后的真实情感！")
+                st.success(f"✅ 完美匹配！AI正确识别了{selected_case}情感")
+            else:
+                st.warning(f"⚠️ 情感不匹配！期望{expected_sentiment}，但识别为{sentiment}")
+                
+                # 智能建议
+                st.markdown("""
+                <div class="warning-box">
+                    <h4>💡 智能建议：</h4>
+                    <p>检测到案例内容与所选类型不匹配，建议：</p>
+                    <ul>
+                        <li>点击「AI生成案例」获取匹配内容</li>
+                        <li>或手动调整案例内容</li>
+                        <li>或重新选择案例类型</li>
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
+                
         else:
-            st.warning("⚠️ 请先生成案例内容")
+            st.warning("⚠️ 请输入或生成案例内容")
 
 with tab3:
     col_about1, col_about2 = st.columns([2, 1])
@@ -302,81 +339,27 @@ with tab3:
         st.write("""
         ### 论文题目：《基于大语言模型的微博评论情感分析对比研究》
 
-        **研究目标：**
-        - 系统对比大语言模型API vs 传统深度学习模型
-        - 构建中文社交媒体情感分析错误分类体系  
-        - 为实际应用场景提供技术选型建议
+        **研究创新点：**
+        - 🔄 **动态案例验证** - 通过案例类型与识别结果对比，验证模型准确性
+        - 🤖 **智能匹配检测** - 自动检测用户输入与案例类型的匹配度
+        - 📊 **误差分析系统** - 系统化分析情感识别错误原因
 
-        **技术路线：**
-        - 🔹 **大语言模型组**: GLM-4、GPT-3.5等API调用
-        - 🔹 **传统模型组**: BERT、RoBERTa等微调方案
-        - 🔹 **评估指标**: 准确率、F1分数、推理速度、成本
-
-        **研究成果：**
-        - 大语言模型在准确率上表现优异（96.00%）
-        - 传统模型在推理速度上有百倍优势
-        - 构建了完整的技术选型决策框架
-        
-        **创新点：**
-        - 实现动态案例生成，增强系统实用性
-        - 结合规则方法与深度学习方法
-        - 面向真实社交媒体场景优化
+        **研究价值：**
+        - 为情感分析模型提供实用的验证工具
+        - 帮助理解模型在不同情感表达下的表现
+        - 为模型优化提供针对性建议
         """)
 
     with col_about2:
-        st.subheader("📈 性能指标")
-        st.metric("GLM-4准确率", "96.00%", "1.80%")
-        st.metric("BERT准确率", "94.20%", "-")
-        st.metric("推理速度比", "100x", "BERT领先")
-        st.metric("错误率降低", "23.5%")
-        
-        st.subheader("✨ 系统特色")
-        st.info("""
-        - 🤖 AI动态案例生成
-        - 🔄 双模式情感分析
-        - 📊 实时置信度显示
-        - 🎯 精准情感识别
-        """)
-
-        st.subheader("🔧 技术栈")
-        st.code("""
-Python 3.9+
-Streamlit
-GLM-4 API
-Requests
-随机生成算法
-""")
+        st.subheader("📈 验证指标")
+        if st.session_state.last_analysis:
+            analysis = st.session_state.last_analysis
+            st.metric("识别准确率", "匹配" if analysis["sentiment"] == analysis["expected"] else "不匹配")
+            st.metric("置信度", f"{analysis['confidence']:.1%}")
+            st.metric("案例类型", analysis["case_type"])
+        else:
+            st.info("👆 先完成一次案例验证")
 
 # 页脚信息
 st.markdown("---")
-footer_col1, footer_col2, footer_col3 = st.columns(3)
-with footer_col1:
-    st.caption("🎯 基于Streamlit部署")
-with footer_col2:
-    st.caption("📚 学年论文研究成果演示")
-with footer_col3:
-    st.caption("👨‍🎓 作者: wws")
-
-# 侧边栏
-with st.sidebar:
-    st.header("⚙️ 设置")
-    st.info("""
-    **智能微博情感分析系统**
-    
-    特色功能：
-    - 🔄 动态案例生成
-    - 🤖 双分析模式
-    - 📈 实时情感识别
-    """)
-
-    st.subheader("📊 实时统计")
-    st.metric("今日分析次数", "36", "8")
-    st.metric("案例生成次数", "15", "3")
-    st.metric("系统可用性", "100%")
-    
-    st.subheader("🔍 快速测试")
-    test_text = st.text_input("输入测试文本:", "这个功能很棒！")
-    if st.button("快速分析", use_container_width=True):
-        with st.spinner("分析中..."):
-            s, c, t = analyze_sentiment_local(test_text)
-        st.write(f"结果: {s} ({c:.1%})")
+st.caption("🎯 基于Streamlit部署 | 📚 学年论文研究成果演示 | 👨‍🎓 作者: wws")
