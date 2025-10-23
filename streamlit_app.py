@@ -247,16 +247,40 @@ with tab2:
     
     # 案例内容区域
     col_case1, col_case2 = st.columns([3, 1])
-    
     with col_case1:
-        # 手动输入框
-        manual_input = st.text_area(
+    # 显示当前案例内容（只读显示生成的内容）
+    if st.session_state.current_case:
+        st.text_area(
             "案例内容:", 
             value=st.session_state.current_case,
             height=100,
-            key="manual_input",
-            placeholder="手动输入内容或点击右侧按钮生成"
+            key="case_display",
+            placeholder="案例内容将显示在这里"
         )
+    else:
+        st.text_area(
+            "案例内容:", 
+            value="",
+            height=100,
+            key="case_display", 
+            placeholder="点击右侧按钮生成案例内容"
+        )
+    
+    # 单独的手动输入区域
+    with st.expander("✏️ 手动输入案例内容（可选）"):
+        manual_input = st.text_area(
+            "手动输入:",
+            value="",
+            height=80,
+            key="manual_input",
+            placeholder="在这里手动输入你想要测试的案例内容"
+        )
+        if manual_input and st.button("使用此内容", key="use_manual"):
+            st.session_state.current_case = manual_input
+            st.session_state.current_case_type = selected_case
+            st.success("已使用手动输入内容！")
+            st.rerun()
+
         
         # 更新 session state
         if manual_input != st.session_state.current_case:
@@ -413,3 +437,4 @@ with st.sidebar:
         with st.spinner("分析中..."):
             s, c, t = analyze_sentiment_local(test_text)
         st.write(f"结果: {s} ({c:.1%})")
+
