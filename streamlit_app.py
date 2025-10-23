@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 美化样式
+# 美化样式 - 修复颜色问题
 st.markdown("""
 <style>
     .main-header {
@@ -35,13 +35,34 @@ st.markdown("""
         background: #f8f9fa;
         border-left: 4px solid #1f77b4;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        color: #333333;  /* 深灰色文字 */
     }
     .metric-card {
-        background: white;
+        background: #e8f4fd;  /* 淡蓝色背景 */
         padding: 1rem;
         border-radius: 8px;
-        border-left: 4px solid #1f77b4;
+        border-left: 4px solid #1e88e5;
         margin: 0.5rem 0;
+        color: #1565c0;  /* 深蓝色文字 */
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .research-box h3, .research-box h4 {
+        color: #1a237e;  /* 深蓝色标题 */
+        margin-top: 0;
+    }
+    .research-box ul {
+        color: #333333;  /* 深灰色列表文字 */
+    }
+    .research-box p {
+        color: #424242;  /* 中灰色段落文字 */
+    }
+    /* 确保所有文字在白色背景下可见 */
+    .stTextInput label, .stTextArea label, .stSelectbox label {
+        color: #333333 !important;
+    }
+    /* 数据框样式 */
+    .dataframe {
+        color: #333333 !important;
     }
 </style>
 """, unsafe_allow_html=True)
