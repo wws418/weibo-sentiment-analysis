@@ -125,7 +125,7 @@ def generate_case_content(case_type):
         if response.status_code == 200:
             result = response.json()
             content = result['choices'][0]['message']['content'].strip()
-            content = content.replace('"', '').replace('“', '').replace('”', '')
+            content = content.replace('"', '').replace('"', '').replace('"', '')
             return content
         return "生成失败，请点击按钮重试"
     except:
@@ -247,44 +247,39 @@ with tab2:
     
     # 案例内容区域
     col_case1, col_case2 = st.columns([3, 1])
-    with col_case1:
-    # 显示当前案例内容（只读显示生成的内容）
-    if st.session_state.current_case:
-        st.text_area(
-            "案例内容:", 
-            value=st.session_state.current_case,
-            height=100,
-            key="case_display",
-            placeholder="案例内容将显示在这里"
-        )
-    else:
-        st.text_area(
-            "案例内容:", 
-            value="",
-            height=100,
-            key="case_display", 
-            placeholder="点击右侧按钮生成案例内容"
-        )
     
-    # 单独的手动输入区域
-    with st.expander("✏️ 手动输入案例内容（可选）"):
-        manual_input = st.text_area(
-            "手动输入:",
-            value="",
-            height=80,
-            key="manual_input",
-            placeholder="在这里手动输入你想要测试的案例内容"
-        )
-        if manual_input and st.button("使用此内容", key="use_manual"):
-            st.session_state.current_case = manual_input
-            st.session_state.current_case_type = selected_case
-            st.success("已使用手动输入内容！")
-            st.rerun()
-
+    with col_case1:
+        # 显示当前案例内容
+        if st.session_state.current_case:
+            display_text = st.text_area(
+                "案例内容:", 
+                value=st.session_state.current_case,
+                height=100,
+                key="case_display"
+            )
+        else:
+            display_text = st.text_area(
+                "案例内容:", 
+                value="",
+                height=100,
+                key="case_display", 
+                placeholder="点击右侧按钮生成案例内容"
+            )
         
-        # 更新 session state
-        if manual_input != st.session_state.current_case:
-            st.session_state.current_case = manual_input
+        # 单独的手动输入区域
+        with st.expander("✏️ 手动输入案例内容（可选）"):
+            manual_input = st.text_area(
+                "手动输入:",
+                value="",
+                height=80,
+                key="manual_input",
+                placeholder="在这里手动输入你想要测试的案例内容"
+            )
+            if manual_input and st.button("使用此内容", key="use_manual"):
+                st.session_state.current_case = manual_input
+                st.session_state.current_case_type = selected_case
+                st.success("已使用手动输入内容！")
+                st.rerun()
     
     with col_case2:
         st.markdown("<br>", unsafe_allow_html=True)
@@ -304,6 +299,7 @@ with tab2:
                         st.session_state.current_case = new_case
                         st.session_state.current_case_type = selected_case
                         st.success("案例生成成功！")
+                        st.rerun()
                     except Exception as e:
                         st.error(f"生成失败: {str(e)}")
     
@@ -437,4 +433,3 @@ with st.sidebar:
         with st.spinner("分析中..."):
             s, c, t = analyze_sentiment_local(test_text)
         st.write(f"结果: {s} ({c:.1%})")
-
