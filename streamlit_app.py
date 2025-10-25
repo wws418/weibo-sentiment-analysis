@@ -4,16 +4,17 @@ import time
 import random
 import pandas as pd
 import numpy as np
+from datetime import datetime
 
 # 设置页面
 st.set_page_config(
-    page_title="微博情感分析研究平台",
-    page_icon="📊",
+    page_title="微博情感分析动态研究平台",
+    page_icon="🔬",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# 美化样式 - 修复颜色问题
+# 美化样式
 st.markdown("""
 <style>
     .main-header {
@@ -35,41 +36,38 @@ st.markdown("""
         background: #f8f9fa;
         border-left: 4px solid #1f77b4;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        color: #333333;  /* 深灰色文字 */
+        color: #333333;
     }
-    .metric-card {
-        background: #e8f4fd;  /* 淡蓝色背景 */
+    .dynamic-metric {
+        background: #e8f5e8;
         padding: 1rem;
         border-radius: 8px;
-        border-left: 4px solid #1e88e5;
+        border-left: 4px solid #4caf50;
         margin: 0.5rem 0;
-        color: #1565c0;  /* 深蓝色文字 */
-        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        color: #2e7d32;
     }
-    .research-box h3, .research-box h4 {
-        color: #1a237e;  /* 深蓝色标题 */
-        margin-top: 0;
+    .static-metric {
+        background: #e3f2fd;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #2196f3;
+        margin: 0.5rem 0;
+        color: #1565c0;
     }
-    .research-box ul {
-        color: #333333;  /* 深灰色列表文字 */
-    }
-    .research-box p {
-        color: #424242;  /* 中灰色段落文字 */
-    }
-    /* 确保所有文字在白色背景下可见 */
-    .stTextInput label, .stTextArea label, .stSelectbox label {
-        color: #333333 !important;
-    }
-    /* 数据框样式 */
-    .dataframe {
-        color: #333333 !important;
+    .error-analysis {
+        background: #ffebee;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #f44336;
+        margin: 0.5rem 0;
+        color: #c62828;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # 标题区域
-st.markdown('<div class="main-header">📊 微博情感分析对比研究平台</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">《基于大语言模型的微博评论情感分析对比研究》论文成果演示</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">🔬 微博情感分析动态研究平台</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">《基于大语言模型的微博评论情感分析对比研究》 - 实时研究数据</div>', unsafe_allow_html=True)
 
 # 情感分析函数
 def analyze_sentiment_api(text):
@@ -98,17 +96,17 @@ def analyze_sentiment_api(text):
             result = response.json()
             answer = result['choices'][0]['message']['content'].strip()
             if '积极' in answer:
-                return '积极', 0.85 + random.uniform(0.05, 0.15), '🤖', api_time
+                return '积极', 0.85 + random.uniform(0.05, 0.15), api_time
             elif '消极' in answer:
-                return '消极', 0.85 + random.uniform(0.05, 0.15), '🤖', api_time
+                return '消极', 0.85 + random.uniform(0.05, 0.15), api_time
             else:
-                return '中性', 0.7, '🤖', api_time
-        return 'API错误', 0.0, '❌', api_time
+                return '中性', 0.7, api_time
+        return 'API错误', 0.0, api_time
     except Exception as e:
-        return 'API请求失败', 0.0, '❌', 0
+        return 'API请求失败', 0.0, 0
 
 def analyze_sentiment_local(text):
-    """本地规则分析（备用方案）"""
+    """本地规则分析"""
     start_time = time.time()
     
     positive_words = ['好', '开心', '喜欢', '满意', '棒', '优秀', '推荐', '高兴', '幸福', '爱']
@@ -122,293 +120,343 @@ def analyze_sentiment_local(text):
     
     if pos_count > neg_count:
         confidence = 0.6 + min(pos_count * 0.08, 0.3)
-        return '积极', confidence, '📊', local_time
+        return '积极', confidence, local_time
     elif neg_count > pos_count:
         confidence = 0.6 + min(neg_count * 0.08, 0.3)
-        return '消极', confidence, '📊', local_time
+        return '消极', confidence, local_time
     else:
-        return '中性', 0.5, '📊', local_time
+        return '中性', 0.5, local_time
 
-# 标准测试数据集（论文实验数据）
-TEST_DATASET = [
-    {"text": "今天收到心仪公司的offer了！太开心了！", "true_label": "积极", "category": "喜悦成就"},
-    {"text": "考研压力好大，每天学习到凌晨，真的好焦虑", "true_label": "消极", "category": "焦虑压力"},
-    {"text": "真是感谢老板周末大清早让我加班[嘻嘻]", "true_label": "消极", "category": "反讽表达"},
-    {"text": "产品功能不错但是售后服务太差了", "true_label": "中性", "category": "混合情感"},
-    {"text": "这个电影剧情一般般，没什么特别的感觉", "true_label": "中性", "category": "中性评价"},
-    {"text": "和好朋友一起去旅行，风景太美了心情超级好！", "true_label": "积极", "category": "社交娱乐"},
-    {"text": "工作deadline快到了，任务还没完成好担心", "true_label": "消极", "category": "工作压力"},
-    {"text": "这家餐厅环境很好，就是菜品味道一般", "true_label": "中性", "category": "混合评价"}
+# 初始化研究数据
+if 'research_data' not in st.session_state:
+    st.session_state.research_data = {
+        'test_count': 0,
+        'glm4_correct': 0,
+        'rule_correct': 0,
+        'error_cases': [],
+        'test_history': [],
+        'performance_metrics': {
+            'GLM-4': {'accuracy': 0, 'avg_time': 0, 'total_tests': 0},
+            '规则方法': {'accuracy': 0, 'avg_time': 0, 'total_tests': 0}
+        }
+    }
+
+# 标准测试集
+STANDARD_TEST_SET = [
+    {"text": "今天收到心仪公司的offer了！太开心了！", "true_label": "积极"},
+    {"text": "考研压力好大，每天学习到凌晨，真的好焦虑", "true_label": "消极"},
+    {"text": "真是感谢老板周末大清早让我加班[嘻嘻]", "true_label": "消极"},
+    {"text": "产品功能不错但是售后服务太差了", "true_label": "中性"},
+    {"text": "这个电影剧情一般般，没什么特别的感觉", "true_label": "中性"},
+    {"text": "和好朋友一起去旅行，风景太美了心情超级好！", "true_label": "积极"},
+    {"text": "工作deadline快到了，任务还没完成好担心", "true_label": "消极"},
+    {"text": "这家餐厅环境很好，就是菜品味道一般", "true_label": "中性"}
 ]
 
-# 论文实验数据（模拟）
-RESEARCH_RESULTS = {
-    "GLM-4": {"accuracy": 0.96, "f1_score": 0.95, "speed": 2.3, "cost": 0.02},
-    "BERT": {"accuracy": 0.942, "f1_score": 0.938, "speed": 0.02, "cost": 0.001},
-    "RoBERTa": {"accuracy": 0.945, "f1_score": 0.941, "speed": 0.025, "cost": 0.001},
-    "规则方法": {"accuracy": 0.782, "f1_score": 0.765, "speed": 0.001, "cost": 0.0001}
-}
-
-# 主界面标签页 - 重新设计为研究导向
-tab1, tab2, tab3, tab4 = st.tabs(["🔬 技术对比", "📈 实验数据", "🎯 测试验证", "📚 研究总结"])
+# 主界面标签页
+tab1, tab2, tab3, tab4 = st.tabs(["🔬 实时对比测试", "📊 动态数据统计", "🎯 标准验证实验", "📈 研究成果分析"])
 
 with tab1:
-    st.subheader("🔬 技术路线对比研究")
+    st.subheader("🔬 实时技术对比测试")
+    
+    st.markdown("""
+    <div class="research-box">
+        <h3>研究目的：实时对比大语言模型与传统方法性能</h3>
+        <p>每次测试都会积累数据，动态更新研究指标</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.markdown("""
-        <div class="research-box">
-            <h3>研究设计</h3>
-            <p><strong>对比组设置：</strong></p>
-            <ul>
-                <li><strong>大语言模型组：</strong>GLM-4 API调用</li>
-                <li><strong>传统模型组：</strong>BERT、RoBERTa微调</li>
-                <li><strong>基线方法：</strong>规则匹配方法</li>
-            </ul>
-            <p><strong>评估指标：</strong>准确率、F1分数、推理速度、成本</p>
-        </div>
-        """, unsafe_allow_html=True)
+        # 测试输入
+        test_text = st.text_area(
+            "输入微博评论进行测试:", 
+            "今天心情很好，工作顺利！",
+            height=100,
+            key="realtime_input"
+        )
         
-        # 实时技术对比
-        st.subheader("🔄 实时技术对比")
-        test_text = st.text_area("输入测试文本:", "今天心情很好，工作顺利！", height=80)
+        true_sentiment = st.selectbox("选择真实情感标签:", ["积极", "消极", "中性"], key="true_label")
         
-        if st.button("开始对比分析", type="primary"):
+        if st.button("🚀 执行对比测试", type="primary", use_container_width=True):
             if test_text.strip():
-                results = []
-                
-                # GLM-4分析
+                # 执行双模型分析
                 with st.spinner("GLM-4分析中..."):
-                    sentiment1, confidence1, status1, time1 = analyze_sentiment_api(test_text)
-                    results.append({
-                        "方法": "GLM-4", 
-                        "情感": sentiment1, 
-                        "置信度": f"{confidence1:.1%}", 
-                        "耗时": f"{time1:.2f}s",
-                        "状态": status1
-                    })
+                    glm4_sentiment, glm4_confidence, glm4_time = analyze_sentiment_api(test_text)
                 
-                # 本地规则分析
                 with st.spinner("规则方法分析中..."):
-                    sentiment2, confidence2, status2, time2 = analyze_sentiment_local(test_text)
-                    results.append({
-                        "方法": "规则方法", 
-                        "情感": sentiment2, 
-                        "置信度": f"{confidence2:.1%}", 
-                        "耗时": f"{time2:.4f}s",
-                        "状态": status2
-                    })
+                    rule_sentiment, rule_confidence, rule_time = analyze_sentiment_local(test_text)
                 
-                # 显示对比结果
-                df = pd.DataFrame(results)
-                st.dataframe(df, use_container_width=True)
+                # 记录测试结果
+                st.session_state.research_data['test_count'] += 1
                 
-                # 性能对比分析
-                st.info("**性能分析：** GLM-4准确率更高但响应较慢，规则方法速度快但准确率有限")
+                # 检查正确性
+                glm4_correct = glm4_sentiment == true_sentiment
+                rule_correct = rule_sentiment == true_sentiment
                 
+                if glm4_correct:
+                    st.session_state.research_data['glm4_correct'] += 1
+                if rule_correct:
+                    st.session_state.research_data['rule_correct'] += 1
+                
+                # 记录错误案例
+                if not glm4_correct or not rule_correct:
+                    error_case = {
+                        'text': test_text,
+                        'true_label': true_sentiment,
+                        'glm4_pred': glm4_sentiment,
+                        'rule_pred': rule_sentiment,
+                        'timestamp': datetime.now().strftime("%H:%M:%S")
+                    }
+                    st.session_state.research_data['error_cases'].append(error_case)
+                
+                # 更新性能指标
+                data = st.session_state.research_data
+                data['performance_metrics']['GLM-4']['accuracy'] = data['glm4_correct'] / data['test_count']
+                data['performance_metrics']['GLM-4']['avg_time'] = (data['performance_metrics']['GLM-4']['avg_time'] * (data['test_count']-1) + glm4_time) / data['test_count']
+                data['performance_metrics']['GLM-4']['total_tests'] = data['test_count']
+                
+                data['performance_metrics']['规则方法']['accuracy'] = data['rule_correct'] / data['test_count']
+                data['performance_metrics']['规则方法']['avg_time'] = (data['performance_metrics']['规则方法']['avg_time'] * (data['test_count']-1) + rule_time) / data['test_count']
+                data['performance_metrics']['规则方法']['total_tests'] = data['test_count']
+                
+                # 显示实时结果
+                st.success("✅ 测试完成！数据已记录到研究数据库")
+                
+                col_result1, col_result2 = st.columns(2)
+                with col_result1:
+                    st.subheader("GLM-4 结果")
+                    st.metric("情感", glm4_sentiment, "正确" if glm4_correct else "错误")
+                    st.metric("置信度", f"{glm4_confidence:.1%}")
+                    st.metric("耗时", f"{glm4_time:.2f}s")
+                
+                with col_result2:
+                    st.subheader("规则方法 结果")
+                    st.metric("情感", rule_sentiment, "正确" if rule_correct else "错误")
+                    st.metric("置信度", f"{rule_confidence:.1%}")
+                    st.metric("耗时", f"{rule_time:.4f}s")
+    
     with col2:
-        st.subheader("📊 核心指标对比")
+        st.subheader("📈 实时研究指标")
+        st.info(f"总测试次数: {st.session_state.research_data['test_count']}")
         
-        for model, metrics in RESEARCH_RESULTS.items():
-            with st.container():
+        metrics = st.session_state.research_data['performance_metrics']
+        
+        for model, metric in metrics.items():
+            if metric['total_tests'] > 0:
                 st.markdown(f"""
-                <div class="metric-card">
+                <div class="dynamic-metric">
                     <h4>{model}</h4>
-                    <p>准确率: <strong>{metrics['accuracy']:.1%}</strong></p>
-                    <p>F1分数: <strong>{metrics['f1_score']:.3f}</strong></p>
-                    <p>速度: <strong>{metrics['speed']:.3f}s</strong></p>
-                    <p>成本: <strong>¥{metrics['cost']:.3f}</strong></p>
+                    <p>实时准确率: <strong>{metric['accuracy']:.1%}</strong></p>
+                    <p>平均耗时: <strong>{metric['avg_time']:.3f}s</strong></p>
+                    <p>测试样本: <strong>{metric['total_tests']}次</strong></p>
                 </div>
                 """, unsafe_allow_html=True)
 
 with tab2:
-    st.subheader("📈 实验数据与分析")
-    
-    # 标准测试集验证
-    st.markdown("### 标准测试集性能验证")
-    
-    if st.button("运行标准测试", key="run_standard_test"):
-        progress_bar = st.progress(0)
-        test_results = []
-        
-        for i, test_case in enumerate(TEST_DATASET):
-            progress_bar.progress((i + 1) / len(TEST_DATASET))
-            
-            # GLM-4分析
-            sentiment, confidence, status, analysis_time = analyze_sentiment_api(test_case["text"])
-            is_correct = sentiment == test_case["true_label"]
-            
-            test_results.append({
-                "文本": test_case["text"][:30] + "...",
-                "真实标签": test_case["true_label"],
-                "预测标签": sentiment,
-                "是否正确": "✅" if is_correct else "❌",
-                "置信度": f"{confidence:.1%}",
-                "耗时": f"{analysis_time:.2f}s",
-                "类别": test_case["category"]
-            })
-        
-        results_df = pd.DataFrame(test_results)
-        st.dataframe(results_df, use_container_width=True)
-        
-        # 统计结果
-        correct_count = sum(1 for r in test_results if r["是否正确"] == "✅")
-        accuracy = correct_count / len(test_results)
-        
-        col_stat1, col_stat2, col_stat3 = st.columns(3)
-        with col_stat1:
-            st.metric("测试样本数", len(TEST_DATASET))
-        with col_stat2:
-            st.metric("正确识别数", correct_count)
-        with col_stat3:
-            st.metric("准确率", f"{accuracy:.1%}")
-    
-    # 错误分析
-    st.markdown("### 🔍 错误类型分析")
-    
-    error_categories = {
-        "反讽误解": "表面积极实际消极的表达被误判",
-        "混合情感": "同时包含积极和消极因素难以分类", 
-        "语境缺失": "缺乏上下文信息导致误判",
-        "网络用语": "新兴网络表达难以识别"
-    }
-    
-    for category, description in error_categories.items():
-        with st.expander(f"❌ {category}"):
-            st.write(description)
-            st.info("**改进建议：** 增加上下文理解、优化提示词设计")
-
-with tab3:
-    st.subheader("🎯 模型验证测试")
+    st.subheader("📊 动态数据统计")
     
     st.markdown("""
     <div class="research-box">
-        <h3>验证目的</h3>
-        <p>通过用户自定义输入，验证不同技术路线在实际应用场景下的表现，</p>
-        <p>为技术选型提供实证依据。</p>
+        <h3>基于实际测试数据的统计分析</h3>
+        <p>所有指标均来自用户的实际测试积累</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # 测试接口
-    col_test1, col_test2 = st.columns([2, 1])
-    
-    with col_test1:
-        user_test_text = st.text_area(
-            "输入测试评论:", 
-            "这个产品功能很强大，但是价格有点贵，还在犹豫要不要买。",
-            height=100,
-            placeholder="输入微博评论进行测试验证..."
-        )
-    
-    with col_test2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        test_btn = st.button("🔍 验证分析", use_container_width=True)
-    
-    if test_btn and user_test_text:
-        col_result1, col_result2 = st.columns(2)
+    if st.session_state.research_data['test_count'] > 0:
+        col_stat1, col_stat2 = st.columns(2)
         
-        with col_result1:
-            st.subheader("GLM-4分析结果")
-            with st.spinner("大模型分析中..."):
-                sentiment, confidence, status, analysis_time = analyze_sentiment_api(user_test_text)
-                st.success(f"情感: {sentiment}")
-                st.info(f"置信度: {confidence:.1%} | 耗时: {analysis_time:.2f}s")
+        with col_stat1:
+            st.subheader("性能对比")
+            metrics = st.session_state.research_data['performance_metrics']
+            
+            comparison_data = []
+            for model, metric in metrics.items():
+                if metric['total_tests'] > 0:
+                    comparison_data.append({
+                        '模型': model,
+                        '准确率': metric['accuracy'],
+                        '平均耗时(s)': metric['avg_time'],
+                        '测试次数': metric['total_tests']
+                    })
+            
+            if comparison_data:
+                df = pd.DataFrame(comparison_data)
+                st.dataframe(df, use_container_width=True)
+                
+                # 准确率对比图表
+                chart_data = pd.DataFrame({
+                    '模型': [item['模型'] for item in comparison_data],
+                    '准确率': [item['准确率'] for item in comparison_data]
+                })
+                st.bar_chart(chart_data.set_index('模型'))
         
-        with col_result2:
-            st.subheader("规则方法结果") 
-            with st.spinner("规则分析中..."):
-                sentiment2, confidence2, status2, analysis_time2 = analyze_sentiment_local(user_test_text)
-                st.success(f"情感: {sentiment2}")
-                st.info(f"置信度: {confidence2:.1%} | 耗时: {analysis_time2:.4f}s")
+        with col_stat2:
+            st.subheader("错误分析")
+            error_cases = st.session_state.research_data['error_cases']
+            
+            if error_cases:
+                st.metric("总错误案例", len(error_cases))
+                
+                # 错误类型统计
+                error_types = {}
+                for case in error_cases[-10:]:  # 显示最近10个错误
+                    error_key = f"{case['true_label']}→GLM4:{case['glm4_pred']}/规则:{case['rule_pred']}"
+                    error_types[error_key] = error_types.get(error_key, 0) + 1
+                
+                for error_type, count in list(error_types.items())[:5]:
+                    st.markdown(f"""
+                    <div class="error-analysis">
+                        <strong>{error_type}</strong> - {count}次
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.success("🎉 暂无错误案例！")
+    
+    else:
+        st.warning("尚未进行测试，请先在「实时对比测试」页面进行测试")
+
+with tab3:
+    st.subheader("🎯 标准验证实验")
+    
+    st.markdown("""
+    <div class="research-box">
+        <h3>标准化测试集验证</h3>
+        <p>使用预定义的标准测试集验证模型泛化能力</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("运行标准测试集验证", type="primary"):
+        progress_bar = st.progress(0)
+        results = []
         
-        # 技术选型建议
-        st.markdown("### 💡 技术选型建议")
-        if analysis_time < 1.0 and confidence > 0.8:
-            st.success("**推荐使用GLM-4**：响应速度快且置信度高")
-        elif analysis_time2 < 0.01:
-            st.warning("**考虑规则方法**：极快响应速度，适合实时场景")
-        else:
-            st.info("**根据需求选择**：GLM-4准确性更高，规则方法成本更低")
+        for i, test_case in enumerate(STANDARD_TEST_SET):
+            progress_bar.progress((i + 1) / len(STANDARD_TEST_SET))
+            
+            # GLM-4分析
+            glm4_sentiment, glm4_confidence, glm4_time = analyze_sentiment_api(test_case["text"])
+            glm4_correct = glm4_sentiment == test_case["true_label"]
+            
+            # 规则方法分析
+            rule_sentiment, rule_confidence, rule_time = analyze_sentiment_local(test_case["text"])
+            rule_correct = rule_sentiment == test_case["true_label"]
+            
+            results.append({
+                "测试文本": test_case["text"][:20] + "...",
+                "真实标签": test_case["true_label"],
+                "GLM-4预测": glm4_sentiment,
+                "GLM-4正确": "✅" if glm4_correct else "❌",
+                "规则方法预测": rule_sentiment,
+                "规则方法正确": "✅" if rule_correct else "❌"
+            })
+        
+        # 显示结果
+        results_df = pd.DataFrame(results)
+        st.dataframe(results_df, use_container_width=True)
+        
+        # 计算准确率
+        glm4_accuracy = sum(1 for r in results if r["GLM-4正确"] == "✅") / len(results)
+        rule_accuracy = sum(1 for r in results if r["规则方法正确"] == "✅") / len(results)
+        
+        col_acc1, col_acc2 = st.columns(2)
+        with col_acc1:
+            st.metric("GLM-4标准集准确率", f"{glm4_accuracy:.1%}")
+        with col_acc2:
+            st.metric("规则方法标准集准确率", f"{rule_accuracy:.1%}")
 
 with tab4:
-    st.subheader("📚 研究总结与建议")
+    st.subheader("📈 研究成果分析")
     
-    col_sum1, col_sum2 = st.columns(2)
+    st.markdown("""
+    <div class="research-box">
+        <h3>基于实际测试数据的研究结论</h3>
+        <p>所有结论均来自用户测试积累的真实数据</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    with col_sum1:
-        st.markdown("""
-        <div class="research-box">
-            <h3>🏆 研究成果</h3>
-            <ul>
-                <li><strong>准确性突破：</strong>GLM-4达到96.00%准确率</li>
-                <li><strong>效率对比：</strong>传统模型推理速度快100倍</li>
-                <li><strong>错误体系：</strong>构建4类主要错误分类</li>
-                <li><strong>选型框架：</strong>提出场景化技术选型方案</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    if st.session_state.research_data['test_count'] > 0:
+        metrics = st.session_state.research_data['performance_metrics']
         
-        st.markdown("""
-        <div class="research-box">
-            <h3>🎯 技术选型建议</h3>
-            <p><strong>高精度场景：</strong>GLM-4 API调用</p>
-            <p><strong>实时性场景：</strong>BERT微调部署</p>
-            <p><strong>成本敏感场景：</strong>规则方法+简单模型</p>
-            <p><strong>混合方案：</strong>规则过滤+大模型精判</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col_sum2:
-        st.markdown("""
-        <div class="research-box">
-            <h3>📈 性能对比总结</h3>
-            <p><strong>大语言模型优势：</strong></p>
-            <ul>
-                <li>零样本学习能力强</li>
-                <li>理解复杂语义</li>
-                <li>适应新兴表达</li>
-            </ul>
-            <p><strong>传统模型优势：</strong></p>
-            <ul>
-                <li>推理速度极快</li>
-                <li>部署成本低</li>
-                <li>数据隐私性好</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        col_concl1, col_concl2 = st.columns(2)
         
-        st.markdown("""
-        <div class="research-box">
-            <h3>🔮 研究展望</h3>
-            <ul>
-                <li>探索大模型与传统模型融合</li>
-                <li>优化提示词工程设计</li>
-                <li>研究多模态情感分析</li>
-                <li>构建领域自适应方案</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        with col_concl1:
+            st.subheader("🏆 研究发现")
+            
+            glm4_acc = metrics['GLM-4']['accuracy']
+            rule_acc = metrics['规则方法']['accuracy']
+            glm4_time = metrics['GLM-4']['avg_time']
+            rule_time = metrics['规则方法']['avg_time']
+            
+            findings = []
+            
+            if glm4_acc > rule_acc:
+                findings.append(f"✅ **准确性优势**: GLM-4比规则方法准确率高 {(glm4_acc-rule_acc):.1%}")
+            else:
+                findings.append(f"⚠️ **意外结果**: 规则方法表现优于GLM-4")
+            
+            if rule_time < glm4_time * 100:  # 规则方法快100倍以上
+                findings.append(f"⚡ **速度优势**: 规则方法比GLM-4快 {glm4_time/rule_time:.0f} 倍")
+            
+            if st.session_state.research_data['error_cases']:
+                error_rate = len(st.session_state.research_data['error_cases']) / st.session_state.research_data['test_count']
+                findings.append(f"🔍 **错误模式**: 发现 {len(st.session_state.research_data['error_cases'])} 个错误案例 ({error_rate:.1%})")
+            
+            for finding in findings:
+                st.markdown(f"""
+                <div class="dynamic-metric">
+                    {finding}
+                </div>
+                """, unsafe_allow_html=True)
+        
+        with col_concl2:
+            st.subheader("🎯 技术选型建议")
+            
+            glm4_acc = metrics['GLM-4']['accuracy']
+            rule_acc = metrics['规则方法']['accuracy']
+            glm4_time = metrics['GLM-4']['avg_time']
+            rule_time = metrics['规则方法']['avg_time']
+            
+            if glm4_acc > 0.9 and glm4_time < 3:
+                st.success("""
+                **推荐方案: GLM-4 API调用**
+                - 适用场景: 高精度要求的业务场景
+                - 优势: 准确率高，理解能力强
+                - 注意: API调用成本和响应时间
+                """)
+            
+            if rule_acc > 0.7 and rule_time < 0.01:
+                st.warning("""
+                **备选方案: 规则方法**
+                - 适用场景: 实时性要求高的场景
+                - 优势: 响应极快，零成本
+                - 局限: 准确率相对较低
+                """)
+            
+            st.info("""
+            **混合方案建议**
+            规则方法初步过滤 + GLM-4复杂案例精判
+            - 平衡准确率和响应速度
+            - 优化成本效益比
+            """)
+    
+    else:
+        st.warning("请先进行测试以生成研究成果分析")
 
-# 页脚信息
+# 页脚
 st.markdown("---")
-st.caption("🎯 基于Streamlit部署 | 📚 学年论文研究成果演示 | 👨‍🎓 作者: wws")
+st.caption("🔬 动态研究平台 | 每次测试都在推进研究进展 | 作者: wws")
 
 # 侧边栏
 with st.sidebar:
-    st.header("⚙️ 研究设置")
+    st.header("📚 研究说明")
     st.info("""
-    **微博情感分析对比研究平台**
-    
-    研究内容：
-    - 🔬 技术路线对比
-    - 📊 实验数据分析  
-    - 🎯 模型验证测试
-    - 📚 研究成果总结
+    **动态研究平台特点:**
+    - 所有数据来自实际测试
+    - 指标随测试积累动态更新
+    - 真实反映模型性能
+    - 支持研究结论生成
     """)
-
-    st.subheader("📈 研究统计")
-    st.metric("测试样本数", "8")
-    st.metric("对比方法数", "4")
-    st.metric("研究准确率", "96.00%")
+    
+    st.metric("总测试次数", st.session_state.research_data['test_count'])
+    st.metric("研究开始时间", datetime.now().strftime("%H:%M"))
