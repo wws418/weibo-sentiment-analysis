@@ -55,6 +55,23 @@ st.markdown("""
         margin: 0.5rem 0;
         color: #529b2e;
     }
+    .dark-research-box {
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        background: #1a202c;
+        border-left: 4px solid #4a5568;
+        color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .dark-metric {
+        background: #2d3748;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #4a5568;
+        margin: 0.5rem 0;
+        color: white;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -426,10 +443,11 @@ with tab2:
 with tab3:
     st.subheader("📊 动态研究数据")
     
+    # 使用黑色背景的研究框
     st.markdown("""
-    <div class="result-box">
-        <h3>实时研究指标</h3>
-        <p>基于用户实际测试数据的动态统计结果</p>
+    <div class="dark-research-box">
+        <h3>🎯 实时研究指标</h3>
+        <p>基于用户实际测试数据的动态统计结果 - 黑色主题专业研究视图</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -439,40 +457,94 @@ with tab3:
         col_res1, col_res2 = st.columns(2)
         
         with col_res1:
-            st.subheader("研究进度")
-            st.metric("总测试次数", data['test_count'])
-            st.metric("GLM-4正确次数", data['glm4_correct'])
-            st.metric("规则方法正确次数", data['rule_correct'])
+            st.markdown("""
+            <div class="dark-research-box">
+                <h4>📈 研究进度</h4>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # 使用黑色背景的指标
+            st.markdown(f"""
+            <div class="dark-metric">
+                <p><strong>总测试次数:</strong> {data['test_count']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+            <div class="dark-metric">
+                <p><strong>GLM-4正确次数:</strong> {data['glm4_correct']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+            <div class="dark-metric">
+                <p><strong>规则方法正确次数:</strong> {data['rule_correct']}</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col_res2:
-            st.subheader("实时性能指标")
+            st.markdown("""
+            <div class="dark-research-box">
+                <h4>⚡ 实时性能指标</h4>
+            </div>
+            """, unsafe_allow_html=True)
+            
             metrics = data['performance_metrics']
             
             for model, metric in metrics.items():
                 if metric['total_tests'] > 0:
                     st.markdown(f"""
-                    <div class="dynamic-metric">
+                    <div class="dark-metric">
                         <h4>{model}</h4>
-                        <p>实时准确率: <strong>{metric['accuracy']:.1%}</strong></p>
-                        <p>平均耗时: <strong>{metric['avg_time']:.3f}s</strong></p>
-                        <p>测试样本: <strong>{metric['total_tests']}次</strong></p>
+                        <p>📊 实时准确率: <strong>{metric['accuracy']:.1%}</strong></p>
+                        <p>⏱️ 平均耗时: <strong>{metric['avg_time']:.3f}s</strong></p>
+                        <p>🔢 测试样本: <strong>{metric['total_tests']}次</strong></p>
                     </div>
                     """, unsafe_allow_html=True)
         
-        # 研究结论
-        st.subheader("📈 实时研究结论")
+        # 研究结论 - 也使用黑色背景
+        st.markdown("""
+        <div class="dark-research-box">
+            <h4>🔍 实时研究结论</h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
         glm4_acc = metrics['GLM-4']['accuracy'] if metrics['GLM-4']['total_tests'] > 0 else 0
         rule_acc = metrics['规则方法']['accuracy'] if metrics['规则方法']['total_tests'] > 0 else 0
         
         if glm4_acc > rule_acc:
-            st.success(f"**研究发现**: GLM-4在当前测试中表现优于规则方法，准确率高出 {glm4_acc-rule_acc:.1%}")
+            st.markdown(f"""
+            <div class="dark-metric">
+                <h4>🎯 研究发现</h4>
+                <p>GLM-4在当前测试中表现优于规则方法</p>
+                <p><strong>准确率优势: {glm4_acc-rule_acc:.1%}</strong></p>
+            </div>
+            """, unsafe_allow_html=True)
         elif rule_acc > glm4_acc:
-            st.warning(f"**研究发现**: 规则方法在当前测试中表现优于GLM-4，准确率高出 {rule_acc-glm4_acc:.1%}")
+            st.markdown(f"""
+            <div class="dark-metric">
+                <h4>🎯 研究发现</h4>
+                <p>规则方法在当前测试中表现优于GLM-4</p>
+                <p><strong>准确率优势: {rule_acc-glm4_acc:.1%}</strong></p>
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.info("**研究发现**: 两种方法在当前测试中表现相当")
+            st.markdown(f"""
+            <div class="dark-metric">
+                <h4>🎯 研究发现</h4>
+                <p>两种方法在当前测试中表现相当</p>
+                <p><strong>准确率相同: {glm4_acc:.1%}</strong></p>
+            </div>
+            """, unsafe_allow_html=True)
             
     else:
-        st.warning("尚未进行测试研究，请先在「情感分析」页面进行测试并选择真实情感标签")
+        st.markdown("""
+        <div class="dark-research-box">
+            <h4>⚠️ 研究数据不足</h4>
+            <p>尚未进行测试研究，请先在「情感分析」页面进行测试并选择真实情感标签</p>
+            <p>每次测试都会为研究贡献宝贵数据！</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 with tab4:
     col_about1, col_about2 = st.columns([2, 1])
