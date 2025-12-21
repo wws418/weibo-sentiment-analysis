@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ========== 美化样式：还原你之前的页面风格 ==========
+# ========== 美化样式：之前的页面风格 ==========
 st.markdown("""
 <style>
     /* 页面全局样式 */
@@ -78,7 +78,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ========== 核心配置：你的GLM4 API密钥+论文参数 ==========
+# ========== 核心配置：GLM4 API密钥+论文参数 ==========
 YOUR_API_KEY = "563c1368df004a888dabb01cb8d09456.CGrmdCeaaYCKrbQf"
 # 论文实验数据（加入系统，体现研究深度）
 EXPERIMENT_DATA = {
@@ -90,7 +90,7 @@ EXPERIMENT_DATA = {
 
 # ========== 论文级功能模块1：GLM4 API调用（核心创新） ==========
 def glm4_sentiment_analysis(text):
-    """GLM4 API情感分析（论文核心模块）"""
+    """GLM4 API情感分析（核心模块）"""
     api_url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
     headers = {
         "Content-Type": "application/json",
@@ -119,7 +119,7 @@ def glm4_sentiment_analysis(text):
         return bert_sentiment_analysis(text)  # 降级为传统模型
 
 def glm4_case_generation(case_type, research_point):
-    """GLM4 API案例生成（论文实验模块）"""
+    """GLM4 API案例生成（实验模块）"""
     api_url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
     headers = {
         "Content-Type": "application/json",
@@ -163,7 +163,7 @@ def glm4_case_generation(case_type, research_point):
 
 # ========== 论文级功能模块2：传统模型分析（对比实验） ==========
 def bert_sentiment_analysis(text):
-    """BERT模型情感分析（论文对比模块）"""
+    """BERT模型情感分析（对比模块）"""
     # 模拟BERT模型推理（实际可替换为真实模型）
     positive_words = ['开心', '上岸', '震撼', '喜欢']
     negative_words = ['压力', '拉胯', '熬通宵', '谢谢']
@@ -174,11 +174,15 @@ def bert_sentiment_analysis(text):
     else:
         return "中性", 0.85, "BERT"
 
-# ========== 论文级功能模块3：实验数据可视化（研究深度） ==========
+# ========== 论文级功能模块3：实验数据可视化（修复中文乱码） ==========
 def plot_experiment_data():
-    """绘制模型对比实验图（论文核心图表）"""
+    """绘制模型对比实验图（核心图表，修复中文乱码）"""
     df = pd.DataFrame(EXPERIMENT_DATA)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    
+    # 关键：指定支持中文的字体（SimHei），解决乱码
+    plt.rcParams["font.sans-serif"] = ["SimHei"]
+    plt.rcParams["axes.unicode_minus"] = False  # 解决负号显示问题
     
     # 子图1：准确率+F1分数对比
     x = range(len(df["模型"]))
@@ -211,25 +215,25 @@ def plot_experiment_data():
 # ========== 页面主体：还原你的风格+论文模块 ==========
 # 标题区
 st.markdown('<div class="main-header">微博评论情感分析系统</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">—— 基于GLM4 API与传统模型的对比研究（学年论文） ——</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">—— 基于GLM4 API与传统模型的对比研究 ——</div>', unsafe_allow_html=True)
 
-# 标签页：分模块展示（情感分析、案例生成、实验对比、论文结论）
+# 标签页：分模块展示（情感分析、案例生成、实验对比、结论）
 tab1, tab2, tab3, tab4 = st.tabs([
     "1. 实时情感分析（GLM4+传统模型）", 
     "2. 实验案例生成（GLM4 API）", 
-    "3. 模型对比实验（论文数据）", 
+    "3. 模型对比实验（数据）", 
     "4. 研究结论与创新点"
 ])
 
-# ========== 标签页1：实时情感分析（核心功能+论文对比） ==========
+# ========== 标签页1：实时情感分析（核心功能+对比） ==========
 with tab1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("🔍 实时情感分析（支持GLM4 API/传统模型切换）")
     
-    # 模型选择（论文对比点）
+    # 模型选择（对比点）
     model_choice = st.radio(
-        "选择分析模型（论文对比实验）：",
-        ["GLM4 API（你的创新点）", "BERT（传统模型）", "TextCNN（传统模型）"],
+        "选择分析模型（对比实验）：",
+        ["GLM4 API（创新点）", "BERT（传统模型）", "TextCNN（传统模型）"],
         horizontal=True
     )
     
@@ -264,7 +268,7 @@ with tab1:
                 st.metric("使用模型", model)
             
             # 额外分析（论文细节）
-            st.info(f"📌 模型说明：{model}在论文实验中的准确率为{EXPERIMENT_DATA['准确率'][EXPERIMENT_DATA['模型'].index(model)]:.2f}")
+            st.info(f"📌 模型说明：{model}在实验中的准确率为{EXPERIMENT_DATA['准确率'][EXPERIMENT_DATA['模型'].index(model)]:.2f}")
         else:
             st.error("请输入要分析的微博评论！")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -272,18 +276,18 @@ with tab1:
 # ========== 标签页2：实验案例生成（GLM4 API+论文研究点） ==========
 with tab2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("📝 实验案例生成（GLM4 API，贴合论文研究场景）")
+    st.subheader("📝 实验案例生成（GLM4 API，贴合研究场景）")
     
     # 案例类型选择（论文研究场景）
     case_types = {
-        "开心喜悦": "积极情感，包含成就感/喜悦（论文研究点1）",
-        "焦虑压力": "消极情感，包含压力/焦虑（论文研究点2）",
-        "反讽表达": "反讽情感，表面积极实际消极（论文研究点3）",
-        "混合情感": "混合情感，同时包含积极+消极（论文研究点4）",
-        "中性评价": "中性情感，客观无倾向（论文研究点5）"
+        "开心喜悦": "积极情感，包含成就感/喜悦（研究点1）",
+        "焦虑压力": "消极情感，包含压力/焦虑（研究点2）",
+        "反讽表达": "反讽情感，表面积极实际消极（研究点3）",
+        "混合情感": "混合情感，同时包含积极+消极（研究点4）",
+        "中性评价": "中性情感，客观无倾向（研究点5）"
     }
     selected_case = st.selectbox(
-        "选择案例类型（论文研究场景）：",
+        "选择案例类型（研究场景）：",
         list(case_types.keys())
     )
     research_point = case_types[selected_case]
@@ -302,13 +306,13 @@ with tab2:
                 sentiment, confidence, model = glm4_sentiment_analysis(st.session_state["case_content"])
                 st.metric("案例情感倾向", sentiment)
                 st.metric("置信度", f"{confidence:.2f}")
-                st.info(f"该案例对应论文研究点：{research_point}")
+                st.info(f"该案例对应研究点：{research_point}")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ========== 标签页3：模型对比实验（论文核心数据可视化） ==========
+# ========== 标签页3：模型对比实验 ==========
 with tab3:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("📊 模型对比实验（论文核心数据）")
+    st.subheader("📊 模型对比实验")
     
     # 实验数据表格
     st.dataframe(pd.DataFrame(EXPERIMENT_DATA), use_container_width=True)
@@ -333,7 +337,7 @@ with tab4:
     st.subheader("🎓 研究结论与创新点")
     
     st.markdown("""
-    ### 一、核心创新点（你的论文贡献）
+    ### 一、核心创新点
     1. **技术创新**：首次将GLM4大模型API应用于微博情感分析，替代传统的BERT/TextCNN等需要训练的模型，减少了模型训练、调参的成本；
     2. **功能创新**：实现了「GLM4 API情感分析+GLM4 API案例生成」的闭环系统，覆盖论文实验的“数据生成-模型分析-结果验证”全流程；
     3. **体验创新**：设计了“API调用失败自动降级为传统模型”的机制，保证系统的可用性。
@@ -341,20 +345,19 @@ with tab4:
     ### 二、研究结论
     - GLM4 API在微博情感分析任务上的准确率（0.96）显著高于传统模型（BERT为0.89）；
     - 传统模型的推理速度更快，但泛化能力（如反讽情感识别）弱于GLM4；
-    - 你的系统可作为“低成本、高精度”的情感分析工具，适用于社交媒体舆情监测场景。
+    - 系统可作为“低成本、高精度”的情感分析工具，适用于社交媒体舆情监测场景。
     """)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ========== 侧边栏：论文信息+系统说明 ==========
 with st.sidebar:
-    st.header("📚 学年论文信息")
-    st.write("**论文题目**：基于GLM4大模型API的微博情感分析研究")
-    st.write("**作者**：武文思")
-    st.write("**指导老师**：XXX老师")
-    st.write("**研究时间**：2025年")
+    st.header("📚 系统信息")
+    st.write("基于GLM4大模型API的微博情感分析研究")
+    st.write("**作者**：wws")
+
     
     st.divider()
     st.header("⚙️ 系统说明")
     st.write("✅ 支持GLM4 API与传统模型对比")
-    st.write("✅ 包含论文实验数据与可视化")
+    st.write("✅ 包含实验数据与可视化")
     st.write("✅ 支持在线（GitHub Codespaces）/本地运行")
